@@ -38,6 +38,7 @@ struct metadata_t {
   bit<REGISTER_REMAIN_BIT_WIDTH> remain;
   bit<REGISTER_REMAIN_BIT_WIDTH> out_remain;
   bit<32> hash1;
+  bit<32> ports;
   bool found;
 }
 
@@ -77,11 +78,13 @@ parser SwitchIngressParser(packet_in pkt, out header_t hdr, out metadata_t ig_md
 
   state parse_tcp {
     pkt.extract(hdr.tcp);
+    ig_md.ports = hdr.tcp.src_port ++ hdr.tcp.dst_port;
     transition accept;
   }
 
   state parse_udp {
     pkt.extract(hdr.udp);
+    ig_md.ports = hdr.udp.src_port ++ hdr.udp.dst_port;
     transition accept;
   }
 }
@@ -131,15 +134,15 @@ control SwitchIngress(inout header_t hdr, inout metadata_t ig_md,
     }
   };
 
-  action get_hash1(bit<32> src_addr, bit<32> dst_addr) {
-    bit<32> hash_val = hash1.get({src_addr, dst_addr});
+  action get_hash1(bit<32> src_addr, bit<32> dst_addr, bit<32> ports, bit<8> protocol) {
+    bit<32> hash_val = hash1.get({src_addr, dst_addr, ports, protocol});
     ig_md.idx = hash_val[REGISTER_BIT_WIDTH - 1:0];
     ig_md.remain = hash_val[31:REGISTER_BIT_WIDTH];
     ig_md.hash1 = hash_val;
   }
 
   apply { 
-    get_hash1(hdr.ipv4.src_addr, hdr.ipv4.dst_addr);
+    get_hash1(hdr.ipv4.src_addr, hdr.ipv4.dst_addr, ig_md.ports, hdr.ipv4.protocol);
     bool found_t_1 = table_1_lookup.execute(ig_md.idx); 
 
     if (found_t_1) {
