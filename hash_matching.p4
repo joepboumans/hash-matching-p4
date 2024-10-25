@@ -135,6 +135,7 @@ control SwitchIngress(inout header_t hdr, inout metadata_t ig_md,
     bit<32> hash_val = hash1.get({src_addr});
     ig_md.idx = hash_val[REGISTER_BIT_WIDTH - 1:0];
     ig_md.remain = hash_val[31:REGISTER_BIT_WIDTH];
+    ig_md.hash1 = hash_val;
   }
 
   apply { 

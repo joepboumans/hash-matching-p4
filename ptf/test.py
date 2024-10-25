@@ -63,7 +63,8 @@ class DigestResubmitTest(BfRuntimeTest):
         logger.info(pkt_in)
         ip_hash = crc32(src_addr, dst_addr, src_port, dst_port, protocol, 0xFFFFFFFF)
         logger.info(ip_hash)
-        logger.info(ip_hash.to_bytes(4, byteorder='little', signed=False).hex())
+        # Should equal | remain | idx |
+        logger.info(ip_hash.to_bytes(4, byteorder='big').hex())
         ig_port = swports[2]
         testutils.send_packet(self, ig_port, pkt_in)
         testutils.verify_packet(self, pkt_in, ig_port)
