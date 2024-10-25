@@ -62,44 +62,12 @@ class DigestResubmitTest(BfRuntimeTest):
         pkt_in = testutils.simple_tcp_packet(ip_src=src_addr, ip_dst=dst_addr, tcp_sport=int(src_port), tcp_dport=int(dst_port))
         logger.info(pkt_in)
         ip_hash = crc32(src_addr, dst_addr, src_port, dst_port, protocol, 0xFFFFFFFF)
-        logger.info(ip_hash)
         # Should equal | remain | idx |
         logger.info(ip_hash.to_bytes(4, byteorder='big').hex())
         ig_port = swports[2]
         testutils.send_packet(self, ig_port, pkt_in)
         testutils.verify_packet(self, pkt_in, ig_port)
         return
-        for ip_entry in ip_list:
-            src_addr = getattr(ip_entry, "ip")
-
-            # logger.info("Populating port_meta table...")
-            ig_port = swports[2]
-
-            # logger.info("Adding entries to port_meta and resub tables")
-            ''' TC:2 Send, receive and verify packets'''
-            pkt_in = testutils.simple_tcp_packet(ip_src=src_addr)
-            # logger.info("Sending simple packet to switch")
-            testutils.send_packet(self, ig_port, pkt_in)
-            # logger.info("Verifying simple packet has been correct...")
-            testutils.verify_packet(self, pkt_in, ig_port)
-            logger.info("..packet received correctly")
-            # testutils.send_packet(self, ig_port, pkt_in)
-            # testutils.verify_packet(self, pkt_in, ig_port)
-
-        ''' TC:4 Validate received digest data'''
-        # Get data from table_1
-        summed = 0
-        data_table_1 = table_1.entry_get(target, [], {"from_hw" : True})
-        for data, key in data_table_1:
-            data_dict = data.to_dict()
-            entry_val = data_dict[f"SwitchIngress.table_1.f1"][0]
-            summed += entry_val
-            if entry_val != 0:
-                logger.info(data_dict)
-                logger.info(entry_val.to_bytes(2,'big'))
-        logger.info(f"Table1 has {summed} total remainders")
-        assert(summed != 0)
-
 
     def tearDown(self):
         logger.info("Tearing down test")
